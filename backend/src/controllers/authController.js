@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const pool = require('../config/db');
-const { validateRegister } = require('../validators/authValidator');
+const { validateRegister, validateLogin } = require('../validators/authValidator');
+const { COOKIE_NAME, signToken, cookieOptions } = require('../utils/token');
 
 const SALT_ROUNDS = 10;
 
@@ -58,4 +59,49 @@ async function register(req, res) {
   }
 }
 
-module.exports = { register };
+async function login(req, res) {
+  // 1. Validasi input
+  const { errors, data } = validateLogin(req.body);
+  if (Object.keys(errors).length > 0) {
+    return res.status(422).json({ success: false, message: 'Data tidak valid', errors });
+  }
+
+  // 2. Cari user berdasarkan email
+  const result = await pool.query(
+    'SELECT id, username, email, phone, password FROM users WHERE email = $1',
+    [data.email],
+  );
+  const user = result.rows[0];
+
+  // 3. Cocokkan password
+  const isValid = user && (await bcrypt.compare(data.password, user.password));
+  if (!isValid) {
+    return res.status(401).json({ success: false, message: 'Email atau password salah' });
+  }
+
+  // 4. Buat token & simpan di cookie
+  const token = signToken(user);
+  res.cookie(COOKIE_NAME, token, cookieOptions);
+
+  delete user.password;
+  return res.json({ success: true, message: 'Login berhasil', data: user });
+}
+
+function logout(req, res) {
+  const { maxAge, ...clearOptions } = cookieOptions;
+  res.clearCookie(COOKIE_NAME, clearOptions);
+  return res.json({ success: true, message: 'Logout berhasil' });
+}
+
+async function me(req, res) {
+  const result = await pool.query(
+    'SELECT id, username, email, phone, created_at FROM users WHERE id = $1',
+    [req.user.id],
+  );
+  if (result.rows.length === 0) {
+    return res.status(401).json({ success: false, message: 'User tidak ditemukan' });
+  }
+  return res.json({ success: true, data: result.rows[0] });
+}
+
+module.exports = { register, login, logout, me };
