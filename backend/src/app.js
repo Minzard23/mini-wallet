@@ -20,7 +20,7 @@ app.get('/api/health', (req, res) => {
 
 // ===== ROUTES =====
 app.use('/api/auth', require('./routes/authRoutes'));
-// Route wallet akan ditambahkan di sini nanti
+app.use('/api', require('./routes/walletRoutes'));
 
 // 404: route tidak ditemukan (HARUS di bawah semua route)
 app.use((req, res) => {
