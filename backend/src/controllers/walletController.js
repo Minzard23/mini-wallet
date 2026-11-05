@@ -143,26 +143,64 @@ async function transfer(req, res) {
   }
 }
 
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/; // format YYYY-MM-DD, contoh 2026-11-05
+
+// Cek tanggal valid (format benar & tanggalnya ada di kalender)
+function isValidDate(text) {
+  if (!DATE_REGEX.test(text)) return false;
+  const date = new Date(`${text}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(text);
+}
+
 // GET /api/transactions -> riwayat mutasi (uang masuk & keluar) milik user yang login
+// Filter opsional lewat query string:
+//   ?from=2026-11-01&to=2026-11-30   -> periode (zona waktu WIB)
+//   ?direction=IN | OUT              -> hanya uang masuk / keluar
+//   ?limit=5                         -> jumlah data (1-500, default 100)
 async function getTransactions(req, res) {
+  const { from, to, direction } = req.query;
+  const errors = {};
+
+  if (from !== undefined && !isValidDate(from)) errors.from = 'Tanggal awal tidak valid (format YYYY-MM-DD).';
+  if (to !== undefined && !isValidDate(to)) errors.to = 'Tanggal akhir tidak valid (format YYYY-MM-DD).';
+  if (!errors.from && !errors.to && from && to && from > to) {
+    errors.to = 'Tanggal akhir tidak boleh sebelum tanggal awal.';
+  }
+  if (direction !== undefined && !['IN', 'OUT'].includes(direction)) {
+    errors.direction = 'Filter jenis harus IN atau OUT.';
+  }
+  const limit = req.query.limit === undefined ? 100 : Number(req.query.limit);
+  if (!Number.isInteger(limit) || limit < 1 || limit > 500) errors.limit = 'Limit harus angka 1-500.';
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(422).json({ success: false, message: Object.values(errors)[0], errors });
+  }
+
+  // Parameter yang tidak diisi dikirim sebagai NULL -> kondisinya otomatis diabaikan di SQL
   const result = await pool.query(
     `WITH my_wallet AS (
        SELECT id FROM wallets WHERE user_id = $1
+     ),
+     history AS (
+       SELECT t.id, t.type, t.amount, t.description, t.created_at,
+              CASE WHEN t.receiver_wallet_id = (SELECT id FROM my_wallet) THEN 'IN' ELSE 'OUT' END AS direction,
+              su.username AS sender,
+              ru.username AS receiver
+       FROM transactions t
+       LEFT JOIN wallets sw ON sw.id = t.sender_wallet_id
+       LEFT JOIN users   su ON su.id = sw.user_id
+       JOIN wallets      rw ON rw.id = t.receiver_wallet_id
+       JOIN users        ru ON ru.id = rw.user_id
+       WHERE (t.sender_wallet_id = (SELECT id FROM my_wallet)
+              OR t.receiver_wallet_id = (SELECT id FROM my_wallet))
+         AND ($2::date IS NULL OR t.created_at >= ($2::date)::timestamp AT TIME ZONE 'Asia/Jakarta')
+         AND ($3::date IS NULL OR t.created_at <  ($3::date + 1)::timestamp AT TIME ZONE 'Asia/Jakarta')
      )
-     SELECT t.id, t.type, t.amount, t.description, t.created_at,
-            CASE WHEN t.receiver_wallet_id = (SELECT id FROM my_wallet) THEN 'IN' ELSE 'OUT' END AS direction,
-            su.username AS sender,
-            ru.username AS receiver
-     FROM transactions t
-     LEFT JOIN wallets sw ON sw.id = t.sender_wallet_id
-     LEFT JOIN users   su ON su.id = sw.user_id
-     JOIN wallets      rw ON rw.id = t.receiver_wallet_id
-     JOIN users        ru ON ru.id = rw.user_id
-     WHERE t.sender_wallet_id   = (SELECT id FROM my_wallet)
-        OR t.receiver_wallet_id = (SELECT id FROM my_wallet)
-     ORDER BY t.created_at DESC, t.id DESC
-     LIMIT 50`,
-    [req.user.id],
+     SELECT * FROM history
+     WHERE ($4::text IS NULL OR direction = $4)
+     ORDER BY created_at DESC, id DESC
+     LIMIT $5`,
+    [req.user.id, from || null, to || null, direction || null, limit],
   );
   return res.json({ success: true, data: result.rows });
 }

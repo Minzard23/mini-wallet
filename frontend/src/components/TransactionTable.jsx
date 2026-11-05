@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { formatDate, formatRupiah } from '../utils/format';
 
 // Teks keterangan tiap baris, tergantung jenis & arah transaksi
@@ -6,15 +7,25 @@ function describe(trx) {
   return trx.direction === 'IN' ? `Transfer dari ${trx.sender}` : `Transfer ke ${trx.receiver}`;
 }
 
-export default function TransactionTable({ transactions, loading }) {
+// Dipakai di Dashboard (5 terakhir) dan halaman Mutasi (semua sesuai filter)
+export default function TransactionTable({
+  title = 'Riwayat Transaksi',
+  transactions,
+  loading,
+  emptyText = 'Belum ada transaksi. Coba top-up dulu.',
+  showMoreLink = false,
+}) {
   return (
     <section className="card">
-      <h2>Riwayat Transaksi</h2>
+      <div className="card-head">
+        <h2>{title}</h2>
+        {showMoreLink && <Link to="/mutasi">Lihat semua mutasi →</Link>}
+      </div>
 
       {loading && transactions.length === 0 ? (
         <p className="muted">Memuat riwayat...</p>
       ) : transactions.length === 0 ? (
-        <p className="muted">Belum ada transaksi. Coba top-up dulu.</p>
+        <p className="muted">{emptyText}</p>
       ) : (
         <div className="table-wrap">
           <table>

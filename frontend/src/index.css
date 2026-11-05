@@ -135,7 +135,43 @@ th.right, td.right { text-align: right; }
 .amount-in { color: var(--success); font-weight: 700; }
 .amount-out { color: var(--danger); font-weight: 700; }
 
+/* ---------- Navbar ---------- */
+.topbar-left { display: flex; align-items: center; gap: 24px; }
+.nav { display: flex; gap: 4px; }
+.nav-link {
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+.nav-link:hover { background: var(--bg); color: var(--text); }
+.nav-link.active { background: #ccfbf1; color: var(--primary); }
+
+/* ---------- Mutasi ---------- */
+.page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.page-head h1 { margin: 0; }
+.page-head p { margin: 4px 0 0; }
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.card-head a { font-size: 14px; text-decoration: none; }
+.filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding-bottom: 10px; }
+.filters .field { margin-bottom: 0; }
+.field select {
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font: inherit;
+  background: #fff;
+}
+.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.summary-item { display: grid; gap: 6px; padding: 18px 24px; }
+.summary-item strong { font-size: 22px; }
+
 @media (max-width: 720px) {
+  .filters, .summary { grid-template-columns: 1fr; }
+  .hide-mobile { display: none; }
+  .topbar-left { gap: 12px; }
+  .nav-link { padding: 6px 8px; }
   .grid-2 { grid-template-columns: 1fr; }
   .balance-card strong { font-size: 30px; }
   .topbar { padding: 12px 16px; }

@@ -3,6 +3,7 @@ import api, { getErrorMessage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { formatRupiah } from '../utils/format';
 import Alert from '../components/Alert';
+import Navbar from '../components/Navbar';
 import TopupForm from '../components/TopupForm';
 import TransferForm from '../components/TransferForm';
 import TransactionTable from '../components/TransactionTable';
@@ -14,14 +15,14 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Ambil saldo & riwayat sekaligus (paralel) dari backend
+  // Ambil saldo & 5 transaksi terakhir sekaligus (paralel) dari backend
   const loadData = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const [walletRes, trxRes] = await Promise.all([
         api.get('/wallet'),
-        api.get('/transactions'),
+        api.get('/transactions', { params: { limit: 5 } }),
       ]);
       setBalance(walletRes.data.data.balance);
       setTransactions(trxRes.data.data);
@@ -39,13 +40,7 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard">
-      <header className="topbar">
-        <div className="brand">💳 Mini Wallet</div>
-        <div className="topbar-right">
-          <span className="muted">Halo, <strong>{user.username}</strong></span>
-          <button className="btn btn-ghost" onClick={logout}>Keluar</button>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="container">
         <Alert>{error}</Alert>
@@ -61,7 +56,12 @@ export default function DashboardPage() {
           <TransferForm balance={balance} onSuccess={loadData} />
         </div>
 
-        <TransactionTable transactions={transactions} loading={loading} />
+        <TransactionTable
+          title="Transaksi Terakhir"
+          transactions={transactions}
+          loading={loading}
+          showMoreLink
+        />
       </main>
     </div>
   );
