@@ -1,14 +1,14 @@
 const MAX_TRANSACTION = 10_000_000; // batas maksimum per transaksi: Rp10.000.000
 
 // Memeriksa nominal (amount) untuk top-up & transfer.
-// Mengembalikan { error } kalau tidak valid, atau { amount } (angka) kalau valid.
+// kembaliin { error } kalau tidak valid, atau { amount } (angka) kalau valid.
 function validateAmount(value) {
   // Kosong: tidak dikirim, null, atau string kosong/spasi
   if (value === undefined || value === null || String(value).trim() === '') {
     return { error: 'Nominal tidak boleh kosong.' };
   }
 
-  // Hanya terima angka atau teks. Boolean/array/object langsung ditolak
+  // Hanya terima angka atau teks. Boolean/array/object langsung ditolak (biar securenya lebih bagus)
   if (typeof value !== 'number' && typeof value !== 'string') {
     return { error: 'Nominal harus berupa angka.' };
   }

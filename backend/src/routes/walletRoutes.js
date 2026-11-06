@@ -4,7 +4,7 @@ const { getWallet, topup, transfer, getTransactions } = require('../controllers/
 
 const router = express.Router();
 
-// Semua endpoint wallet wajib login -> requireAuth (satpam) dijalankan dulu
+// Semua endpoint wallet wajib login -> requireAuth (satpam) dijalankan dulu biar bisa masuk ke controller
 router.get('/wallet', requireAuth, getWallet);
 router.post('/topup', requireAuth, topup);
 router.post('/transfer', requireAuth, transfer);

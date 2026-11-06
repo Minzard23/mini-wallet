@@ -28,10 +28,10 @@ async function register(req, res) {
     return res.status(422).json({ success: false, message: 'Data sudah digunakan', errors: dupErrors });
   }
 
-  // 3. Hash password
+  // 3. Hash passwordnya 
   const hashedPassword = await bcrypt.hash(data.password, SALT_ROUNDS);
 
-  // 4. Simpan user + wallet dalam satu transaction
+  // 4. Simpan user + wallet dalam satu transaction biar rapih
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -66,7 +66,7 @@ async function login(req, res) {
     return res.status(422).json({ success: false, message: 'Data tidak valid', errors });
   }
 
-  // 2. Cari user berdasarkan email
+  // 2. Cari user berdasarkan email 
   const result = await pool.query(
     'SELECT id, username, email, phone, password FROM users WHERE email = $1',
     [data.email],
@@ -79,7 +79,7 @@ async function login(req, res) {
     return res.status(401).json({ success: false, message: 'Email atau password salah' });
   }
 
-  // 4. Buat token & simpan di cookie
+  // 4. Buat token JWT & simpan di cookie
   const token = signToken(user);
   res.cookie(COOKIE_NAME, token, cookieOptions);
 

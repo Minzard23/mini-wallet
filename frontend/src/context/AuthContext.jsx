@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     api.get('/auth/me')
       .then((res) => setUser(res.data.data))
-      .catch(() => setUser(null)) // 401 = belum login, itu normal
+      .catch(() => setUser(null)) // 401 = belum login
       .finally(() => setChecking(false));
   }, []);
 

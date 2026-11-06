@@ -10,7 +10,7 @@ CREATE TABLE users (
   username   VARCHAR(30)  NOT NULL UNIQUE,
   email      VARCHAR(100) NOT NULL UNIQUE,
   phone      VARCHAR(15)  NOT NULL UNIQUE,
-  password   VARCHAR(255) NOT NULL,            -- hash bcrypt, bukan password asli
+  password   VARCHAR(255) NOT NULL,           
   created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
@@ -26,7 +26,7 @@ CREATE TABLE transactions (
   id                 SERIAL PRIMARY KEY,
   type               transaction_type NOT NULL,
   amount             BIGINT  NOT NULL,
-  sender_wallet_id   INTEGER REFERENCES wallets(id),          -- NULL kalau TOPUP
+  sender_wallet_id   INTEGER REFERENCES wallets(id),        
   receiver_wallet_id INTEGER NOT NULL REFERENCES wallets(id),
   description        VARCHAR(255),
   created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -36,7 +36,7 @@ CREATE TABLE transactions (
     (type = 'TOPUP'    AND sender_wallet_id IS NULL) OR
     (type = 'TRANSFER' AND sender_wallet_id IS NOT NULL)
   ),
-  -- Tidak boleh transfer ke diri sendiri
+  -- Ga Boleh Transfer ke diri sendiri
   CONSTRAINT transactions_no_self_transfer CHECK (sender_wallet_id IS DISTINCT FROM receiver_wallet_id)
 );
 

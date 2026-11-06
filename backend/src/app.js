@@ -11,7 +11,7 @@ app.use(cors({
 }));
 
 app.use(express.json());   // membaca body request berformat JSON
-app.use(cookieParser());   // membaca cookie (dipakai untuk token httpOnly)
+app.use(cookieParser());   
 
 // Endpoint sederhana untuk cek apakah server hidup
 app.get('/api/health', (req, res) => {
@@ -28,7 +28,6 @@ app.use((req, res) => {
 });
 
 // Error handler global: menangkap error yang tidak tertangani supaya server tidak crash
-// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   // Body JSON rusak, misal {"amount": } -> 400 Bad Request
   if (err.type === 'entity.parse.failed') {

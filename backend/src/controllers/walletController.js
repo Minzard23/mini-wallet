@@ -33,7 +33,7 @@ async function topup(req, res) {
     );
     const wallet = walletResult.rows[0];
 
-    // Catat di riwayat transaksi
+    // riwayat transaksi
     await client.query(
       `INSERT INTO transactions (type, amount, receiver_wallet_id, description)
        VALUES ('TOPUP', $1, $2, 'Top-up saldo')`,
@@ -92,8 +92,8 @@ async function transfer(req, res) {
   try {
     await client.query('BEGIN');
 
-    // 3a. Potong saldo pengirim, HANYA kalau saldonya cukup (balance >= amount).
-    //     Pengecekan & pemotongan terjadi dalam satu query (atomik),
+    // 3a. Potong saldo pengirim, HANYA kalau saldonya cukup 
+    //     Pengecekan & pemotongan terjadi dalam satu query 
     //     jadi 2 request bersamaan tidak bisa membuat saldo minus.
     const senderResult = await client.query(
       `UPDATE wallets SET balance = balance - $1, updated_at = NOW()
@@ -121,7 +121,7 @@ async function transfer(req, res) {
       [amount, sender.id, receiver.wallet_id, description || null],
     );
 
-    // 3d. Semua langkah berhasil -> simpan permanen
+    // 3d. Semua langkah berhasil HARUSNYA :')
     await client.query('COMMIT');
     return res.status(201).json({
       success: true,
@@ -145,7 +145,7 @@ async function transfer(req, res) {
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/; // format YYYY-MM-DD, contoh 2026-11-05
 
-// Cek tanggal valid (format benar & tanggalnya ada di kalender)
+// Cek tanggal valid 
 function isValidDate(text) {
   if (!DATE_REGEX.test(text)) return false;
   const date = new Date(`${text}T00:00:00Z`);
